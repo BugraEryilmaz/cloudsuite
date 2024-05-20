@@ -23,6 +23,8 @@ The following options can modify the settings of the server:
 - `--writer-count=<int>`: The number of writer threads Cassandra uses. Cassandra recommends 8 threads per CPU core. The default value is 32.
 - `--heap-size=<int>`: JVM heap size. Its unit is GB, and by default, JVM uses `max(min(1/2 ram, 1GB), min(1/4 ram, 8GB))`. It is good to increase the value when the server has enough DRAM for better performance or lower the value for explicit resource restriction.
 - `--affinity=<cpu_id, ...>`: The CPUs Cassandra works on. This setting let Cassandra be aware of its CPU affinity explicitly. It should be used together with the container's resource management option (e.g., `--cpuset-cpus`). 
+- `--row-cache=<size>`: The size of the row cache, example 16GiB. By default, the row cache is disabled.
+
 
 ### Multiple Server Containers
 
