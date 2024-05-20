@@ -24,6 +24,7 @@ parser.add_argument("--writer-count", "-w", type=int, help="The number of writer
 parser.add_argument("--heap-size", type=int, help="The size of JVM heap in GB. Default is max(min(1/2 ram, 1GB), min(1/4 ram, 8GB)).")
 parser.add_argument("--seed-server-ip", help="The IP address of the seed server. This option is only for multiple-node deployment.")
 parser.add_argument("--affinity", help="The CPU ids (separated by comma) given to Cassandra to set JVM affinity. By default, Cassandra would use all CPU cores.")
+parser.add_argument("--row-cache", help="The size of row cache, example 16GiB. By default, the row cache is disabled.", default="0")
 
 
 args = parser.parse_args()
@@ -56,6 +57,8 @@ config["seed_provider"][0]["parameters"][0]["seeds"] = f"{args.listen_ip}:7000"
 config["concurrent_reads"] = args.reader_count
 config["concurrent_counter_writes"] = args.reader_count
 config["concurrent_writes"] = args.writer_count
+config["row_cache_size"] = args.row_cache
+config["row_cache_save_period"] = "1h"
 
 if args.seed_server_ip:
     config["seed_provider"][0]["parameters"][0]["seeds"] = f"{args.seed_server_ip}:7000"
@@ -78,10 +81,39 @@ if args.heap_size:
             jvm_options[idx] = ""
         if l.startswith("-Xmx"):
             jvm_options[idx] = ""
+        # Disable CMS Garbage Collection
+        if l.startswith("-XX:+UseConcMarkSweepGC"):
+            jvm_options[idx] = ""
+        if l.startswith("-XX:+CMSParallelRemarkEnabled"):
+            jvm_options[idx] = ""
+        if l.startswith("-XX:SurvivorRatio"):
+            jvm_options[idx] = ""
+        if l.startswith("-XX:MaxTenuringThreshold"):
+            jvm_options[idx] = ""
+        if l.startswith("-XX:CMSInitiatingOccupancyFraction"):
+            jvm_options[idx] = ""
+        if l.startswith("-XX:+UseCMSInitiatingOccupancyOnly"):
+            jvm_options[idx] = ""
+        if l.startswith("-XX:CMSWaitDuration"):
+            jvm_options[idx] = ""
+        if l.startswith("-XX:+CMSParallelInitialMarkEnabled"):
+            jvm_options[idx] = ""
+        if l.startswith("-XX:+CMSEdenChunksRecordAlways"):
+            jvm_options[idx] = ""
+        if l.startswith("-XX:+CMSClassUnloadingEnabled"):
+            jvm_options[idx] = ""
+        
 
     # Add heap size
     jvm_options.append(f"-Xms{args.heap_size}G\n")
     jvm_options.append(f"-Xmx{args.heap_size}G\n")
+
+    # Add G1 Garbage Collection
+    jvm_options.append("-XX:+UseG1GC\n")
+    jvm_options.append("-XX:+ParallelRefProcEnabled\n")
+
+    # Add PreserveFramePointer for flamegraph
+    jvm_options.append("-XX:+PreserveFramePointer\n")
 
 if args.affinity:
     found = False
