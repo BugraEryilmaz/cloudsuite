@@ -43,10 +43,6 @@ if not path.exists(f"{CASSANDRA_CONFIG}/cassandra.yaml.bak"):
 if not path.exists(f"{CASSANDRA_CONFIG}/jvm-server.options.bak"):
     shutil.copy(f"{CASSANDRA_CONFIG}/jvm-server.options", f"{CASSANDRA_CONFIG}/jvm-server.options.bak")
 
-if not path.exists(f"{CASSANDRA_CONFIG}/jvm11-server.options.bak"):
-    shutil.copy(f"{CASSANDRA_CONFIG}/jvm11-server.options", f"{CASSANDRA_CONFIG}/jvm11-server.options.bak")
-
-
 # Now, modify the cassandra.yaml
 with open(f"{CASSANDRA_CONFIG}/cassandra.yaml") as f:
     config = yaml.safe_load(f)
@@ -101,42 +97,6 @@ if args.affinity:
 # Write it back
 with open(f"{CASSANDRA_CONFIG}/jvm-server.options", "w") as f:
     f.writelines(jvm_options)
-
-# Then, process the jvm11.options
-with open(f"{CASSANDRA_CONFIG}/jvm11-server.options") as f:
-    jvm11_options = f.readlines()
-
-for idx, l in enumerate(jvm11_options):
-    # Disable CMS Garbage Collection
-    if l.startswith("-XX:+UseConcMarkSweepGC"):
-        jvm11_options[idx] = ""
-    if l.startswith("-XX:+CMSParallelRemarkEnabled"):
-        jvm11_options[idx] = ""
-    if l.startswith("-XX:SurvivorRatio"):
-        jvm11_options[idx] = ""
-    if l.startswith("-XX:MaxTenuringThreshold"):
-        jvm11_options[idx] = ""
-    if l.startswith("-XX:CMSInitiatingOccupancyFraction"):
-        jvm11_options[idx] = ""
-    if l.startswith("-XX:+UseCMSInitiatingOccupancyOnly"):
-        jvm11_options[idx] = ""
-    if l.startswith("-XX:CMSWaitDuration"):
-        jvm11_options[idx] = ""
-    if l.startswith("-XX:+CMSParallelInitialMarkEnabled"):
-        jvm11_options[idx] = ""
-    if l.startswith("-XX:+CMSEdenChunksRecordAlways"):
-        jvm11_options[idx] = ""
-    if l.startswith("-XX:+CMSClassUnloadingEnabled"):
-        jvm11_options[idx] = ""
-    # Add G1 Garbage Collection
-    jvm11_options.append("-XX:+UseG1GC\n")
-    jvm11_options.append("-XX:+ParallelRefProcEnabled\n")
-    # Add PreserveFramePointer for flamegraph
-    jvm11_options.append("-XX:+PreserveFramePointer\n")
-
-# Write it back
-with open(f"{CASSANDRA_CONFIG}/jvm11-server.options", "w") as f:
-    f.writelines(jvm11_options)
 
 os.execvp("cassandra", ["cassandra", "-R", "-f"])
 
