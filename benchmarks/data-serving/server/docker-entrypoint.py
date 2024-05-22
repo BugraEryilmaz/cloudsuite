@@ -24,7 +24,7 @@ parser.add_argument("--writer-count", "-w", type=int, help="The number of writer
 parser.add_argument("--heap-size", type=int, help="The size of JVM heap in GB. Default is max(min(1/2 ram, 1GB), min(1/4 ram, 8GB)).")
 parser.add_argument("--seed-server-ip", help="The IP address of the seed server. This option is only for multiple-node deployment.")
 parser.add_argument("--affinity", help="The CPU ids (separated by comma) given to Cassandra to set JVM affinity. By default, Cassandra would use all CPU cores.")
-parser.add_argument("--row-cache", help="The size of row cache, example 16GiB. By default, the row cache is disabled.", default="0")
+parser.add_argument("--row-cache", help="The size of the row cache. Also specify the unit, example 16GiB or 256MiB. By default, the row cache is disabled.", default="0")
 
 
 args = parser.parse_args()
